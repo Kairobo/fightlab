@@ -53,12 +53,18 @@ endif
 ############################################################
 
 # glib
-CFLAGS_GLIB  := `pkg-config --cflags glib-2.0 gmodule-2.0`
-LDFLAGS_GLIB := `pkg-config --libs glib-2.0 gmodule-2.0 gthread-2.0 gobject-2.0`
+# CFLAGS_GLIB  := `pkg-config --cflags glib-2.0 gmodule-2.0`
+# LDFLAGS_GLIB := `pkg-config --libs glib-2.0 gmodule-2.0 gthread-2.0 gobject-2.0`
+CFLAGS_GLIB  :=
+LDFLAGS_GLIB :=
+
 
 # gsl
-CFLAGS_GSL   := -DHAVE_INLINE `pkg-config --cflags gsl`
-LDFLAGS_GSL   := `pkg-config --libs gsl`
+# CFLAGS_GSL   := -DHAVE_INLINE `pkg-config --cflags gsl`
+# LDFLAGS_GSL   := `pkg-config --libs gsl`
+CFLAGS_GSL   :=
+LDFLAGS_GSL   :=
+
 
 # jpeg
 ifeq "$(shell test -f /usr/lib/libjpeg-ipp.so -o -f /usr/lib64/libjpeg-ipp.so && echo ipp)" "ipp"
