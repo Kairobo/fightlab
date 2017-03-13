@@ -214,7 +214,7 @@ int i2c_read_bytes(int bus, uint8_t regAddr, uint8_t length,\
 	ret = write(i2c[bus].file, &regAddr, 1);
 	if(ret!=1){ 
 		printf("write to i2c bus failed\n");
-		return -1;
+		return 0; //just inform user, don't exit
 	}
 	
 	// then read the response

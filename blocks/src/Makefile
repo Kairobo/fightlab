@@ -11,6 +11,7 @@ all: io $(BINARIES)
 
 clean:
 	rm -f *~ *.o io/*.o
+	rm -f $(BINARIES)
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $^ -o $@
