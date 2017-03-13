@@ -11,7 +11,7 @@
 
 #include "../robocape/src/usefulincludes.h"
 #include "../robocape/src/robocape.h"
-#include "../lcmtypes/balancebot_imu_t.h"
+#include "../lcmtypes/mpu9250_imu_t.h"
 
 #define 	SAMPLE_RATE_HZ 			100	  // imu read speed
 #define 	DT 						0.01  // 1/sample_rate
@@ -19,11 +19,11 @@
 
 // Global Variables
 imu_data_t imu_data;
-balancebot_imu_t balancebot_imu_data;
+mpu9250_imu_t mpu9250_imu_data;
 
 // LCM Global Variables
 lcm_t * lcm = NULL;
-static const char IMU_DATA[] = "BALANCEBOT_IMU_DATA";
+static const char IMU_DATA[] = "MPU9250_IMU_DATA";
 
 // IMU interrupt routine
 int read_imu();
@@ -84,30 +84,30 @@ int read_imu(){
 	* read IMU and fill lcm message
 	******************************************************************/
 
-    balancebot_imu_data.timestamp = micros_since_epoch();
+    mpu9250_imu_data.timestamp = micros_since_epoch();
 
-    balancebot_imu_data.accel[0] = imu_data.accel[0];
-    balancebot_imu_data.accel[1] = imu_data.accel[1];
-    balancebot_imu_data.accel[2] = imu_data.accel[2];
+    mpu9250_imu_data.accel[0] = imu_data.accel[0];
+    mpu9250_imu_data.accel[1] = imu_data.accel[1];
+    mpu9250_imu_data.accel[2] = imu_data.accel[2];
 
-    balancebot_imu_data.gyro[0] = imu_data.gyro[0];
-    balancebot_imu_data.gyro[1] = imu_data.gyro[1];
-    balancebot_imu_data.gyro[2] = imu_data.gyro[2];
+    mpu9250_imu_data.gyro[0] = imu_data.gyro[0];
+    mpu9250_imu_data.gyro[1] = imu_data.gyro[1];
+    mpu9250_imu_data.gyro[2] = imu_data.gyro[2];
 
-    balancebot_imu_data.mag[0] = imu_data.mag[0];
-    balancebot_imu_data.mag[1] = imu_data.mag[1];
-    balancebot_imu_data.mag[2] = imu_data.mag[2];
+    mpu9250_imu_data.mag[0] = imu_data.mag[0];
+    mpu9250_imu_data.mag[1] = imu_data.mag[1];
+    mpu9250_imu_data.mag[2] = imu_data.mag[2];
 
-    balancebot_imu_data.temp = imu_data.temp;
+    mpu9250_imu_data.temp = imu_data.temp;
 
-	balancebot_imu_data.TB_angles[0] = imu_data.dmp_TaitBryan[TB_PITCH_X];
-    balancebot_imu_data.TB_angles[1] = imu_data.dmp_TaitBryan[TB_ROLL_Y];
-    balancebot_imu_data.TB_angles[2] = imu_data.dmp_TaitBryan[TB_YAW_Z];
+	mpu9250_imu_data.TB_angles[0] = imu_data.dmp_TaitBryan[TB_PITCH_X];
+    mpu9250_imu_data.TB_angles[1] = imu_data.dmp_TaitBryan[TB_ROLL_Y];
+    mpu9250_imu_data.TB_angles[2] = imu_data.dmp_TaitBryan[TB_YAW_Z];
 
-    balancebot_imu_data.quat[0] = imu_data.dmp_quat[0];
-    balancebot_imu_data.quat[1] = imu_data.dmp_quat[1];
-    balancebot_imu_data.quat[2] = imu_data.dmp_quat[2];
-    balancebot_imu_data.quat[3] = imu_data.dmp_quat[3];
+    mpu9250_imu_data.quat[0] = imu_data.dmp_quat[0];
+    mpu9250_imu_data.quat[1] = imu_data.dmp_quat[1];
+    mpu9250_imu_data.quat[2] = imu_data.dmp_quat[2];
+    mpu9250_imu_data.quat[3] = imu_data.dmp_quat[3];
 
 
 	/*************************************************************
@@ -129,7 +129,7 @@ int read_imu(){
 void* lcm_publish_loop(void* ptr){
 	while(get_state()!=EXITING){
 		//publish lcm messages here, always publishes the latest data
-        balancebot_imu_t_publish(lcm, IMU_DATA, &balancebot_imu_data);
+        mpu9250_imu_t_publish(lcm, IMU_DATA, &mpu9250_imu_data);
 		usleep(1000000 / LCM_HZ);
 	}
 	return NULL;
