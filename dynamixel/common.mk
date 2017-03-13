@@ -74,8 +74,10 @@ else
 endif
 
 # gtk
-CFLAGS_GTK   :=`pkg-config --cflags gtk+-2.0`
-LDFLAGS_GTK  :=`pkg-config --libs gtk+-2.0 gthread-2.0`
+#CFLAGS_GTK   :=`pkg-config --cflags gtk+-2.0`
+#LDFLAGS_GTK  :=`pkg-config --libs gtk+-2.0 gthread-2.0`
+CFLAGS_GTK   :=
+LDFLAGS_GTK  :=
 
 # lcm
 CFLAGS_LCM  := `pkg-config --cflags lcm`
