@@ -15,4 +15,4 @@ lcmtypes:
 	mkdir -p lcmtypes
 
 clean:
-	rm -rf *~ lcmtypes/*
+	rm -rf *~ lcmtypes/*.c lcmtypes/*.h lcmtypes/*.o 

@@ -4,6 +4,6 @@ all:
 	@make -C src
 
 clean:
-	@make -C lcmtypes -s clean
+	@$(MAKE) -f Makefile.lcmgen clean
 	@make -C src -s clean
 

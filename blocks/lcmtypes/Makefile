@@ -1,10 +1,12 @@
+LCMTYPES_NAMES := $(shell ls ../lcmtypes/*.lcm)
+
 # Construct the pathnames to the C types
-LCMTYPES_C := $(shell ls *.c)
+LCMTYPES_C := $(LCMTYPES_NAMES:%.lcm=%.c)
 LCMTYPES_O = $(LCMTYPES_C:%.c=%.o)
 CC = gcc
 CFLAGS = -g `pkg-config --cflags lcm`
 
-ALL = $(LCMTYPES_O)
+ALL = $(LCMTYPES_C) $(LCMTYPES_O)
 
 all: $(ALL)
 
@@ -12,5 +14,4 @@ all: $(ALL)
 	$(CC) $(CFLAGS) -c $^ -o $@
 
 clean:
-	rm -f *.c *.h *.o
-
+	rm -f *.c *.h *.o *~
