@@ -86,5 +86,14 @@ std::vector<optitrack_message_t> parse_optitrack_packet_into_messages(const char
 */
 double quaternion_to_yaw(const optitrack_message_t& msg);
 
+/**
+* 
+* 
+* \param    msg         Optitrack message containing the rigid body quaternion
+* \param    roll        return roll
+* \param    pitch       return pitch
+* \param    yaw         return yaw
+*/
+static void toEulerAngle(const optitrack_message_t& msg, double& roll, double& pitch, double& yaw)
 
 #endif // OPTITRACK_OPTITRACK_HPP

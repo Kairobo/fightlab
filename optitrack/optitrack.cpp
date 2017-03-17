@@ -266,6 +266,18 @@ std::vector<optitrack_message_t> parse_optitrack_packet_into_messages(const char
 }
 
 
+double quaternion_to_roll(const optitrack_message_t& msg)
+{
+    double sgn = (msg.qw > 0) ? -1.0 : 1.0;
+    return 2.0 * asin(-msg.qy) * sgn;
+}
+
+double quaternion_to_pitch(const optitrack_message_t& msg)
+{
+    double sgn = (msg.qw > 0) ? -1.0 : 1.0;
+    return 2.0 * asin(-msg.qy) * sgn;
+}
+
 double quaternion_to_yaw(const optitrack_message_t& msg)
 {
     double sgn = (msg.qw > 0) ? -1.0 : 1.0;

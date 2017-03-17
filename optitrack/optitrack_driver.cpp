@@ -2,7 +2,7 @@
 #include <optitrack/optitrack_channels.h>
 #include <optitrack/common/getopt.h>
 #include <optitrack/common/timestamp.h>
-#include <lcmtypes/pose_xyt_t.hpp>
+#include <lcmtypes/pose_xyzrpy_t.hpp>
 #include <lcm/lcm-cpp.hpp>
 #include <netinet/in.h>
 #include <sys/socket.h>
@@ -71,17 +71,23 @@ int main(int argc, char** argv)
 
             // Converting from Optitrack with z forward, x left, y up to Maebot with x forward y left, z up gives the
             // following:
-            //  opti.z -> maebot.x
-            //  opti.x -> maebot.y
-            //  opti.yaw -> maebot.theta
-            pose_xyt_t truePose;
-            truePose.utime = utime_now();
-            truePose.x = msg.z;
-            truePose.y = msg.x;
-            truePose.theta = quaternion_to_yaw(msg);
-            lcmInstance.publish(TRUE_POSE_CHANNEL, &truePose);
+            //  opti.z -> quadrotor y
+            //  opti.x -> quadrotor x
+            //  -opti.y -> quadrotor z
+            pose_xyzrpy_t Pose;
+            Pose.utime = utime_now();
+            Pose.x = msg.x;
+            Pose.y = msg.z;
+            Pose.z = -msg.y
+            double roll, pitch, yaw;
+            toEulerAngle(msg, &roll, &pitch &yaw);
+            Pose.roll = roll;
+            Pose.pitch = pitch;
+            Pose.yaw = yaw;
+            lcmInstance.publish(QUADROTOR_POSE_CHANNEL, &Pose);
             
-            std::cout << "OptiPose:" << truePose.x << ',' << truePose.y << ',' << truePose.theta << '\n';
+            std::cout << "Loc:" << Pose.x << ',' << Pose.y << ',' << Pose.z << '\n';
+            std::cout << "Ori:" << Pose.roll << ',' << Pose.pitch << ',' << Pose.yaw << '\n';
         }
     }
     
