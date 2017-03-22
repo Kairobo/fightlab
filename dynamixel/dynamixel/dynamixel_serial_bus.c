@@ -151,7 +151,7 @@ send_command_raw_2(dynamixel_bus_t *bus,
 
     // Missing synchronization
     int parameterlen = (params == NULL) ? 0 : params->len;
-    uint8_t *cmd = malloc((9+parameterlen)*sizeof(uint8_t));
+    uint8_t *cmd = malloc((10+parameterlen)*sizeof(uint8_t));
     cmd[0] = 0xff;   // Header
     cmd[1] = 0xff;   // Header
     cmd[2] = 0xfd;   // Header

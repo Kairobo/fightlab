@@ -20,6 +20,7 @@ int main(int argc, char** argv)
     getopt_add_string(gopt, 'i', kInterfaceArg, "", "Local network interface to use for connecting to Optitrack multicast network");
     getopt_add_int(gopt, 'r', kRigidBodyArg, "0", "Id of Optitrack rigid body to publish pose for.");
     
+    
     if (!getopt_parse(gopt, argc, argv, 1) || getopt_get_bool(gopt, "help")) {
         printf("Usage: %s [options]", argv[0]);
         getopt_do_usage(gopt);
