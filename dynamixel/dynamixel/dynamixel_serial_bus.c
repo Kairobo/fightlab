@@ -229,7 +229,7 @@ send_command_raw_2(dynamixel_bus_t *bus,
         return NULL;
     }
 
-    dynamixel_msg_t *body = dynamixel_msg_create(length-1); 
+    dynamixel_msg_t *body = dynamixel_msg_create(length); 
     res = read_fully_timeout(impl->fd,
                              body->buf,
                              body->len,
