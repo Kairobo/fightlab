@@ -151,6 +151,9 @@ std::vector<optitrack_message_t> parse_optitrack_packet_into_messages(const char
 {
     std::vector<optitrack_message_t> messages;
     
+    int major = 2;
+    int minor = 8;
+
     const char* ptr = packet;
     printf("Begin Packet\n-------\n");
     
@@ -168,61 +171,44 @@ std::vector<optitrack_message_t> parse_optitrack_packet_into_messages(const char
     
     if (MessageID == NAT_FRAMEOFDATA) {   // FRAME OF MOCAP DATA packet
         // frame number
-        int frameNumber = 0;
-        memcpy(&frameNumber, ptr, 4);
-        ptr += 4;
+        int frameNumber = 0; memcpy(&frameNumber, ptr, 4); ptr += 4;
         printf("Frame # : %d\n", frameNumber);
         
         // number of data sets (markersets, rigidbodies, etc)
-        int nMarkerSets = 0;
-        memcpy(&nMarkerSets, ptr, 4);
-        ptr += 4;
+        int nMarkerSets = 0; memcpy(&nMarkerSets, ptr, 4); ptr += 4;
         printf("Marker Set Count : %d\n", nMarkerSets);
-        
-        for (int i = 0; i < nMarkerSets; i++) {
+
+        for (int i=0; i < nMarkerSets; i++)
+        {    
             // Markerset name
             char szName[256];
             strcpy(szName, ptr);
             int nDataBytes = (int) strlen(szName) + 1;
             ptr += nDataBytes;
-            //printf("Model Name: %s\n", szName);
-            
+            printf("Model Name: %s\n", szName);
+
             // marker data
-            int nMarkers = 0;
-            memcpy(&nMarkers, ptr, 4);
-            ptr += 4;
-            //printf("Marker Count : %d\n", nMarkers);
-            
-            for (int j = 0; j < nMarkers; j++) {
-                float x = 0;
-                memcpy(&x, ptr, 4);
-                ptr += 4;
-                float y = 0;
-                memcpy(&y, ptr, 4);
-                ptr += 4;
-                float z = 0;
-                memcpy(&z, ptr, 4);
-                ptr += 4;
-                //printf("\tMarker %d : [x=%3.2f,y=%3.2f,z=%3.2f]\n",j,x,y,z);
+            int nMarkers = 0; memcpy(&nMarkers, ptr, 4); ptr += 4;
+            printf("Marker Count : %d\n", nMarkers);
+
+            for(int j=0; j < nMarkers; j++)
+            {
+                float x = 0; memcpy(&x, ptr, 4); ptr += 4;
+                float y = 0; memcpy(&y, ptr, 4); ptr += 4;
+                float z = 0; memcpy(&z, ptr, 4); ptr += 4;
+                printf("\tMarker %d : [x=%3.2f,y=%3.2f,z=%3.2f]\n",j,x,y,z);
             }
         }
         
         // unidentified markers
-        int nOtherMarkers = 0;
-        memcpy(&nOtherMarkers, ptr, 4);
-        ptr += 4;
+        int nOtherMarkers = 0; memcpy(&nOtherMarkers, ptr, 4); ptr += 4;
         printf("Unidentified Marker Count : %d\n", nOtherMarkers);
-        for (int j = 0; j < nOtherMarkers; j++) {
-            float x = 0.0f;
-            memcpy(&x, ptr, 4);
-            ptr += 4;
-            float y = 0.0f;
-            memcpy(&y, ptr, 4);
-            ptr += 4;
-            float z = 0.0f;
-            memcpy(&z, ptr, 4);
-            ptr += 4;
-            //printf("\tMarker %d : pos = [%3.2f,%3.2f,%3.2f]\n",j,x,y,z);
+        for(int j=0; j < nOtherMarkers; j++)
+        {
+            float x = 0.0f; memcpy(&x, ptr, 4); ptr += 4;
+            float y = 0.0f; memcpy(&y, ptr, 4); ptr += 4;
+            float z = 0.0f; memcpy(&z, ptr, 4); ptr += 4;
+            printf("\tMarker %d : pos = [%3.2f,%3.2f,%3.2f]\n",j,x,y,z);
         }
         
         // rigid bodies
@@ -231,7 +217,6 @@ std::vector<optitrack_message_t> parse_optitrack_packet_into_messages(const char
         ptr += 4;
         printf("Rigid Body Count : %d\n", nRigidBodies);
         
-        // ** Just grab one rigid body for ROB 550 / Quadrotor positioning
         for (int j = 0; j < nRigidBodies; j++) {
             optitrack_message_t msg;
             // rigid body position/orientation
@@ -255,8 +240,64 @@ std::vector<optitrack_message_t> parse_optitrack_packet_into_messages(const char
             
             printf("ID : %d\n", msg.id);
             printf("pos: [%3.2f,%3.2f,%3.2f]\n", msg.x, msg.y, msg.z);
-            printf("ori: [%3.2f,%3.2f,%3.2f,%3.2f]\n", msg.qx, msg.qy,
-                   msg.qz, msg.qw);
+            printf("ori: [%3.2f,%3.2f,%3.2f,%3.2f]\n", msg.qx, msg.qy, msg.qz, msg.qw);
+            // associated marker positions
+            int nRigidMarkers = 0;  memcpy(&nRigidMarkers, ptr, 4); ptr += 4;
+            //printf("Marker Count: %d\n", nRigidMarkers);
+            int nBytes = nRigidMarkers*3*sizeof(float);
+            float* markerData = (float*)malloc(nBytes);
+            memcpy(markerData, ptr, nBytes);
+            ptr += nBytes;
+            
+            if(major >= 2)
+            {
+                // associated marker IDs
+                nBytes = nRigidMarkers*sizeof(int);
+                int* markerIDs = (int*)malloc(nBytes);
+                memcpy(markerIDs, ptr, nBytes);
+                ptr += nBytes;
+
+                // associated marker sizes
+                nBytes = nRigidMarkers*sizeof(float);
+                float* markerSizes = (float*)malloc(nBytes);
+                memcpy(markerSizes, ptr, nBytes);
+                ptr += nBytes;
+
+                for(int k=0; k < nRigidMarkers; k++)
+                {
+                    //printf("\tMarker %d: id=%d\tsize=%3.1f\tpos=[%3.2f,%3.2f,%3.2f]\n", k, markerIDs[k], markerSizes[k], markerData[k*3], markerData[k*3+1],markerData[k*3+2]);
+                }
+
+                if(markerIDs)
+                    free(markerIDs);
+                if(markerSizes)
+                    free(markerSizes);
+
+            }
+            else
+            {
+                for(int k=0; k < nRigidMarkers; k++)
+                {
+                    //printf("\tMarker %d: pos = [%3.2f,%3.2f,%3.2f]\n", k, markerData[k*3], markerData[k*3+1],markerData[k*3+2]);
+                }
+            }
+            if(markerData)
+                free(markerData);
+
+            if(major >= 2)
+            {
+                // Mean marker error
+                float fError = 0.0f; memcpy(&fError, ptr, 4); ptr += 4;
+                //printf("Mean marker error: %3.2f\n", fError);
+            }
+
+            // 2.6 and later
+            if( ((major == 2)&&(minor >= 6)) || (major > 2) || (major == 0) ) 
+            {
+                // params
+                short params = 0; memcpy(&params, ptr, 2); ptr += 2;
+                //bool bTrackingValid = params & 0x01; // 0x01 : rigid body was successfully tracked in this frame
+            }
         }
     } else {
         printf("Unrecognized Packet Type: %d\n", MessageID);
@@ -265,21 +306,24 @@ std::vector<optitrack_message_t> parse_optitrack_packet_into_messages(const char
     return messages;
 }
 
+void toEulerAngle(const optitrack_message_t& msg, double& roll, double& pitch, double& yaw)
+{   
+    // from wikipedia quaternion entry
+    double ysqr = msg.qy * msg.qy;
 
-double quaternion_to_roll(const optitrack_message_t& msg)
-{
-    double sgn = (msg.qw > 0) ? -1.0 : 1.0;
-    return 2.0 * asin(-msg.qy) * sgn;
-}
+    // roll (x-axis rotation)
+    double t0 = +2.0 * (msg.qw * msg.qx + msg.qy * msg.qz);
+    double t1 = +1.0 - 2.0 * (msg.qx * msg.qx + ysqr);
+    roll = std::atan2(t0, t1);
 
-double quaternion_to_pitch(const optitrack_message_t& msg)
-{
-    double sgn = (msg.qw > 0) ? -1.0 : 1.0;
-    return 2.0 * asin(-msg.qy) * sgn;
-}
+    // pitch (y-axis rotation)
+    double t2 = +2.0 * (msg.qw * msg.qy - msg.qz * msg.qx);
+    t2 = t2 > 1.0 ? 1.0 : t2;
+    t2 = t2 < -1.0 ? -1.0 : t2;
+    pitch = std::asin(t2);
 
-double quaternion_to_yaw(const optitrack_message_t& msg)
-{
-    double sgn = (msg.qw > 0) ? -1.0 : 1.0;
-    return 2.0 * asin(-msg.qy) * sgn;
+    // yaw (z-axis rotation)
+    double t3 = +2.0 * (msg.qw * msg.qz + msg.qx * msg.qy);
+    double t4 = +1.0 - 2.0 * (ysqr + msg.qz * msg.qz);  
+    yaw = std::atan2(t3, t4);
 }

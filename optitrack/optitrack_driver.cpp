@@ -78,13 +78,15 @@ int main(int argc, char** argv)
             Pose.utime = utime_now();
             Pose.x = msg.x;
             Pose.y = msg.z;
-            Pose.z = -msg.y
-            double roll, pitch, yaw;
-            toEulerAngle(msg, &roll, &pitch &yaw);
+            Pose.z = -msg.y;
+            double roll;
+            double pitch;
+            double yaw;
+            toEulerAngle(msg, roll, pitch, yaw);
             Pose.roll = roll;
             Pose.pitch = pitch;
             Pose.yaw = yaw;
-            lcmInstance.publish(QUADROTOR_POSE_CHANNEL, &Pose);
+            lcmInstance.publish("QUADROTOR_POSE_CHANNEL", &Pose);
             
             std::cout << "Loc:" << Pose.x << ',' << Pose.y << ',' << Pose.z << '\n';
             std::cout << "Ori:" << Pose.roll << ',' << Pose.pitch << ',' << Pose.yaw << '\n';

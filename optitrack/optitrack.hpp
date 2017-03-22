@@ -78,15 +78,6 @@ SOCKET create_optitrack_data_socket(const std::string& interfaceIp, unsigned sho
 std::vector<optitrack_message_t> parse_optitrack_packet_into_messages(const char* packet, int size);
 
 /**
-* quaternion_to_yaw computes the yaw encoded by the quaternion returned by optitrack. The quaternion assumes XYZ 
-* ordering and a Y-up configuration.
-* 
-* \param    msg         Optitrack message containing the rigid body quaternion
-* \return   The yaw of the object being tracked.
-*/
-double quaternion_to_yaw(const optitrack_message_t& msg);
-
-/**
 * 
 * 
 * \param    msg         Optitrack message containing the rigid body quaternion
@@ -94,6 +85,6 @@ double quaternion_to_yaw(const optitrack_message_t& msg);
 * \param    pitch       return pitch
 * \param    yaw         return yaw
 */
-static void toEulerAngle(const optitrack_message_t& msg, double& roll, double& pitch, double& yaw)
+void toEulerAngle(const optitrack_message_t& msg, double& roll, double& pitch, double& yaw);
 
 #endif // OPTITRACK_OPTITRACK_HPP
