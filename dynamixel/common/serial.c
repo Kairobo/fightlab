@@ -54,8 +54,11 @@ serial_open (const char *port, int baud, int blocking)
         return -1;
     }
 
-    cfsetispeed (&opts, serial_translate_baud (9600));
-    cfsetospeed (&opts, serial_translate_baud (9600));
+    //cfsetispeed (&opts, serial_translate_baud (9600));
+    //cfsetospeed (&opts, serial_translate_baud (9600));
+
+    cfsetispeed (&opts, serial_translate_baud (1000000));
+    cfsetospeed (&opts, serial_translate_baud (1000000));
 
     cfmakeraw (&opts);
 
@@ -286,6 +289,9 @@ serial_translate_baud (int inrate)
 #ifdef SUPPORT_HISPEED
         case 460800:
             return B460800;
+        //added by pgaskell
+        case 1000000:
+            return B1000000;
 #endif
         default:
             return -1; // do custom divisor

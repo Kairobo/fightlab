@@ -406,8 +406,8 @@ dynamixel_ensure_EEPROM(dynamixel_device_t *device,
             printf("RESP_V2 = %d : ",resp->len);
             dynamixel_msg_dump(resp);
         }
-        if (resp == NULL || resp->len != (num_bytes+3) || resp->buf[0] != 0) {
-            printf("WRN: Invalid EEPROM read = %d: \n",resp->len);
+        if (resp == NULL || resp->len != (num_bytes+4) || resp->buf[0] != 0) {
+            printf("WRN: Invalid EEPROM read: \n");
             dynamixel_msg_dump(resp);
             return resp;
         }
