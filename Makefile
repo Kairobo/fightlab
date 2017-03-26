@@ -6,6 +6,7 @@ all:
 	@make -C optitrack
 	@make -C blocks
 	@make -C dynamixel
+	@make -C quadrotor
 
 groundstation:
 	@make -C java
