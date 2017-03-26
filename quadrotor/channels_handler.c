@@ -1,5 +1,6 @@
 // Handler function to either pass through RX commands to Naza or else
 // copy computer (autonomous control) commands through to Naza.
+#define EXTERN extern
 #include "quadrotor_main.h"
 
 ////////////////////////////////////////////////////////////////////////
@@ -12,46 +13,51 @@ void channels_handler(const lcm_recv_buf_t *rbuf, const char *channel,
   new_msg.utime = msg->utime;
   new_msg.num_channels = msg->num_channels;
   new_msg.channels = (int16_t*) malloc(msg->num_channels*sizeof(int16_t));
+
+  //copy stick commands into new message and to curent state
+  pthread_mutex_lock(&state_mutex);
   for(int i = 0; i < msg->num_channels; i++){
+    state.RC_cmds[i] = msg->channels[i];
     new_msg.channels[i] = msg->channels[i];
   }
-
   // Copy state to local state struct to minimize mutex lock time
-  struct state localstate;
-  pthread_mutex_lock(&state_mutex);
-  memcpy(&localstate, state, sizeof(struct state));
+  struct current_state_t localstate;
+  localstate = state;
   pthread_mutex_unlock(&state_mutex);
 
-  // Decide whether or not to edit the motor message prior to sending it
-  // set_points[] array is specific to geofencing.  You need to add code 
-  // to compute them for our FlightLab application!!!
+  // Decide whether or not to edit the motor message prior to sending it...
   float pose[8], set_points[8];
-  if(localstate.fence_on == 1){
-    for(int i = 0; i < 8; i++){
-      pose[i] = (float) localstate.pose[i];
-      set_points[i] = localstate.set_points[i];
-    }
+  // Grab pose form current state here
+  if(state.autonomous_mode == 1){
+    
+    //get current quadrotor position, orientation, and relevant velocities
+    pose[0] = localstate.Q_xpos;
+    pose[1] = localstate.Q_ypos;
+    pose[2] = localstate.Q_zpos;
+    pose[3] = localstate.Q_yaw;
+    pose[4] = localstate.Q_xdot;
+    pose[5] = localstate.Q_ydot;
+    pose[6] = localstate.Q_zdot;
+    pose[7] = localstate.Q_yawdot;
+
+    //simple position hold, update later to handle movment
+    set_points[0] = 0.0;
+    set_points[1] = 0.0;
+    set_points[2] = -1.0;
+    set_points[3] = 0.0;
+    set_points[4] = 0.0;
+    set_points[5] = 0.0;
+    set_points[6] = 0.0;
+    set_points[7] = 0.0;
 
     auto_control(pose, set_points, new_msg.channels);
-    printf("AUTONOMOUS ON\n");
+    printf("\rAUTONOMOUS ON                        ");
 
   } else{
     // pass user commands through without modifying
-    printf("MANUAL\n");
+    printf("\rMANUAL                               ");
   }
 
   // send lcm message to motors
   channels_t_publish((lcm_t *) userdata, BLOCKS_TX_CHANNEL, &new_msg);
-
-  // Save received (msg) and modified (new_msg) command data to file.
-  // NOTE:  Customize as needed (set_points[] is for geofencing)
-  fprintf(block_txt,"%"PRId64",%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%f,%f,%f,%f,%f,%f,%f,%f\n",
-      utime_now(),msg->channels[0],msg->channels[1],msg->channels[2],
-      msg->channels[3], msg->channels[7],
-      new_msg.channels[0],new_msg.channels[1],new_msg.channels[2], 
-      new_msg.channels[3],new_msg.channels[7],
-      set_points[0],set_points[1],set_points[2],
-      set_points[3],set_points[4],set_points[5],set_points[6],
-      set_points[7]);
-  fflush(block_txt);
 }

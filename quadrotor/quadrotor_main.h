@@ -3,7 +3,9 @@
 #include "../robocape/src/usefulincludes.h"
 #include "../robocape/src/robocape.h"
 #include "../lcmtypes/pose_xyzrpy_t.h"
+#include "../lcmtypes/pose_list_t.h"
 #include "../lcmtypes/channels_t.h"
+#include "../lcmtypes/cfg_data_frequency_t.h"
 //TODO: include other lcm types as needed
 
 
@@ -12,29 +14,29 @@
 #define     LCM_HZ                  30
 #define     PRINTF_HZ               10
 
-// Global Variables
-imu_data_t imu_data;
 
-// LCM Global Variables
-lcm_t * lcm = NULL;
-static const char BLOCKS_CHANNEL[] = "";
-static const char QUAD_OPTI_CHANNEL[] = "QUADROTOR_POSE_CHANNEL";
-static const char PICKUP_OPTI_CHANNEL[] = "PICKUP_POSE_CHANNEL";
-static const char DROPOFF_OPTI_CHANNEL[] = "DROPOFF_POSE_CHANNEL";
+
+static const char BLOCKS_RX_CHANNEL[] = "CHANNELS_1_RX";
+static const char BLOCKS_TX_CHANNEL[] = "CHANNELS_1_TX";
+static const char OPTI_CHANNEL[] = "QUADROTOR_POSE_CHANNEL";
 
 typedef struct current_state_t{
+    int autonomous_mode;    //Stores current mode, 1 for autonomous
+
+    float Opti_dt;          //seconds from last message
+    uint64_t Q_timestamp;   //timestamp of optitrack message
     float Q_xpos;           // X position of Quadrotor
     float Q_ypos;           // Y position of Quadrotor
     float Q_zpos;           // Z position of Quadrotor
+    float Q_xdot;           // X velocity of Quadrotor
+    float Q_ydot;           // Y velocity of Quadrotor
+    float Q_zdot;           // Z velocity of Quadrotor
     float Q_roll;           // roll of Quadrotor
     float Q_pitch;          // pitch of Quadrotor
     float Q_yaw;            // yaw of Quadrotor
+    float Q_yawdot;         // rotational velocity of Quadrotor
 
-    int RC_thrust;          // Pilot CTL raw thrust
-    int RC_roll;            // Pilot CTL raw roll
-    int RC_pitch;           // Pilot CTL raw pitch
-    int RC_yaw;             // Pilot CTL raw yaw
-    int RC_auto;            // Pilot CTL raw autonomous switch
+    int RC_cmds[8];         //RC stick commands
 
     uint64_t IMU_timestamp; //IMU Data
     float IMU_roll;
@@ -44,7 +46,15 @@ typedef struct current_state_t{
     //TODO: Add other state variables as needed
 } current_state_t;
 
-current_state_t state;
+// Global data
+// #define EXTERN in your main() .c file
+// #define EXTERN extern in all other .c files
+// Global Variables
+EXTERN imu_data_t imu_data;
+// LCM Global Variables
+EXTERN lcm_t * lcm;
+EXTERN pthread_mutex_t state_mutex;
+EXTERN current_state_t state;
 
 // IMU interrupt routine
 int read_imu();
@@ -53,3 +63,9 @@ int read_imu();
 void* printf_loop(void* ptr);
 void* lcm_publish_loop(void* ptr);
 void* lcm_subscribe_loop(void* ptr);
+
+void auto_control(float *pose, float *set_points, int16_t *channels_ptr);
+void channels_handler(const lcm_recv_buf_t *rbuf, const char *channel,
+              const channels_t *msg, void *userdata);
+void optitrack_handler(const lcm_recv_buf_t *rbuf, const char *channel,
+              const pose_list_t *msg, void *userdata);

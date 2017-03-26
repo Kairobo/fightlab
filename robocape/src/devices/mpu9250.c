@@ -739,15 +739,15 @@ int initialize_imu_dmp(imu_data_t *data, imu_config_t conf){
 
 	// configure the gpio interrupt pin
 	if(gpio_export(IMU_INTERRUPT_PIN)<0){
-		printf("ERROR: failed to export GPIO %d", IMU_INTERRUPT_PIN);
+		printf("ERROR: failed to export GPIO %d\n", IMU_INTERRUPT_PIN);
 		return -1;
 	}
 	if(gpio_set_dir(IMU_INTERRUPT_PIN, INPUT_PIN)<0){
-		printf("ERROR: failed to configure GPIO %d", IMU_INTERRUPT_PIN);
+		printf("ERROR: failed to configure GPIO %d\n", IMU_INTERRUPT_PIN);
 		return -1;
 	}
 	if(gpio_set_edge(IMU_INTERRUPT_PIN, "falling")<0){
-		printf("ERROR: failed to configure GPIO %d", IMU_INTERRUPT_PIN);
+		printf("ERROR: failed to configure GPIO %d\n", IMU_INTERRUPT_PIN);
 		return -1;
 	}
 	
