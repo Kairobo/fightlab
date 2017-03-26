@@ -50,7 +50,7 @@
 #define UNDEFINED                   999999.9999
 
 #define MAX_PACKETSIZE	   100000	// max size of packet (actual packet size is dynamic)
-
+#define VERBOSE 0
 
 std::string guess_optitrack_network_interface(void)
 {
@@ -138,7 +138,7 @@ SOCKET create_optitrack_data_socket(const std::string& interfaceIp, unsigned sho
     setsockopt(dataSocket, SOL_SOCKET, SO_RCVBUF, (char*)&optval, optvalSize);
     getsockopt(dataSocket, SOL_SOCKET, SO_RCVBUF, (char*)&optval, &optvalSize);
     if (optval != 0x100000) {
-        printf("[create_optitrack_data_socket] ReceiveBuffer size = %d", optval);
+        printf("[create_optitrack_data_socket] ReceiveBuffer size = %d\n", optval);
     } else {
         printf("[create_optitrack_data_socket] Increased receive buffer size to %d\n", optval);
     }
@@ -155,28 +155,37 @@ std::vector<optitrack_message_t> parse_optitrack_packet_into_messages(const char
     int minor = 8;
 
     const char* ptr = packet;
-    printf("Begin Packet\n-------\n");
+    if(VERBOSE){
+        printf("Begin Packet\n-------\n");
+    }
     
     // message ID
     int MessageID = 0;
     memcpy(&MessageID, ptr, 2);
     ptr += 2;
-    printf("Message ID : %d\n", MessageID);
+    if(VERBOSE){
+        printf("Message ID : %d\n", MessageID);
+    }
     
     // size
     int nBytes = 0;
     memcpy(&nBytes, ptr, 2);
     ptr += 2;
-    printf("Byte count : %d\n", nBytes);
-    
+    if(VERBOSE){
+        printf("Byte count : %d\n", nBytes);
+    }
     if (MessageID == NAT_FRAMEOFDATA) {   // FRAME OF MOCAP DATA packet
         // frame number
         int frameNumber = 0; memcpy(&frameNumber, ptr, 4); ptr += 4;
+        if(VERBOSE){
         printf("Frame # : %d\n", frameNumber);
+        }
         
         // number of data sets (markersets, rigidbodies, etc)
         int nMarkerSets = 0; memcpy(&nMarkerSets, ptr, 4); ptr += 4;
+        if(VERBOSE){
         printf("Marker Set Count : %d\n", nMarkerSets);
+        }
 
         for (int i=0; i < nMarkerSets; i++)
         {    
@@ -185,38 +194,43 @@ std::vector<optitrack_message_t> parse_optitrack_packet_into_messages(const char
             strcpy(szName, ptr);
             int nDataBytes = (int) strlen(szName) + 1;
             ptr += nDataBytes;
-            printf("Model Name: %s\n", szName);
+            //printf("Model Name: %s\n", szName);
 
             // marker data
             int nMarkers = 0; memcpy(&nMarkers, ptr, 4); ptr += 4;
-            printf("Marker Count : %d\n", nMarkers);
+            //printf("Marker Count : %d\n", nMarkers);
 
             for(int j=0; j < nMarkers; j++)
             {
                 float x = 0; memcpy(&x, ptr, 4); ptr += 4;
                 float y = 0; memcpy(&y, ptr, 4); ptr += 4;
                 float z = 0; memcpy(&z, ptr, 4); ptr += 4;
-                printf("\tMarker %d : [x=%3.2f,y=%3.2f,z=%3.2f]\n",j,x,y,z);
+                //printf("\tMarker %d : [x=%3.2f,y=%3.2f,z=%3.2f]\n",j,x,y,z);
             }
         }
         
         // unidentified markers
         int nOtherMarkers = 0; memcpy(&nOtherMarkers, ptr, 4); ptr += 4;
-        printf("Unidentified Marker Count : %d\n", nOtherMarkers);
+        if(VERBOSE){
+            printf("Unidentified Marker Count : %d\n", nOtherMarkers);
+        }
         for(int j=0; j < nOtherMarkers; j++)
         {
             float x = 0.0f; memcpy(&x, ptr, 4); ptr += 4;
             float y = 0.0f; memcpy(&y, ptr, 4); ptr += 4;
             float z = 0.0f; memcpy(&z, ptr, 4); ptr += 4;
-            printf("\tMarker %d : pos = [%3.2f,%3.2f,%3.2f]\n",j,x,y,z);
+            if(VERBOSE){
+                printf("\tMarker %d : pos = [%3.2f,%3.2f,%3.2f]\n",j,x,y,z);
+            }
         }
         
         // rigid bodies
         int nRigidBodies = 0;
         memcpy(&nRigidBodies, ptr, 4);
         ptr += 4;
-        printf("Rigid Body Count : %d\n", nRigidBodies);
-        
+        if(VERBOSE){
+            printf("Rigid Body Count : %d\n", nRigidBodies);
+        }
         for (int j = 0; j < nRigidBodies; j++) {
             optitrack_message_t msg;
             // rigid body position/orientation
@@ -237,10 +251,11 @@ std::vector<optitrack_message_t> parse_optitrack_packet_into_messages(const char
             memcpy(&(msg.qw), ptr, 4);
             ptr += 4;
             messages.push_back(msg);
-            
-            printf("ID : %d\n", msg.id);
-            printf("pos: [%3.2f,%3.2f,%3.2f]\n", msg.x, msg.y, msg.z);
-            printf("ori: [%3.2f,%3.2f,%3.2f,%3.2f]\n", msg.qx, msg.qy, msg.qz, msg.qw);
+            if(VERBOSE){
+                printf("ID : %d\n", msg.id);
+                printf("pos: [%3.2f,%3.2f,%3.2f]\n", msg.x, msg.y, msg.z);
+                printf("ori: [%3.2f,%3.2f,%3.2f,%3.2f]\n", msg.qx, msg.qy, msg.qz, msg.qw);
+                }
             // associated marker positions
             int nRigidMarkers = 0;  memcpy(&nRigidMarkers, ptr, 4); ptr += 4;
             //printf("Marker Count: %d\n", nRigidMarkers);

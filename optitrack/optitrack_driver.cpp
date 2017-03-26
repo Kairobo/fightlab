@@ -13,12 +13,16 @@
 int main(int argc, char** argv)
 {
     const char* kInterfaceArg = "interface";
-    const char* kRigidBodyArg = "rigid-body";
+    const char* kQRigidBodyArg = "quadrotor";
+    const char* kPURigidBodyArg = "pickup";
+    const char* kDORigidBodyArg = "dropoff";
     
     getopt_t* gopt = getopt_create();
     getopt_add_bool(gopt, 'h', "help", 0, "Display this help message.\n");
-    getopt_add_string(gopt, 'i', kInterfaceArg, "", "Local network interface to use for connecting to Optitrack multicast network");
-    getopt_add_int(gopt, 'r', kRigidBodyArg, "0", "Id of Optitrack rigid body to publish pose for.");
+    getopt_add_string(gopt, 'i', kInterfaceArg, "192.168.3.0", "Local network interface for connecting to Optitrack network");
+    getopt_add_int(gopt, 'q', kQRigidBodyArg, "1", "Id of Quadrotor rigid body to publish pose for.");
+    getopt_add_int(gopt, 'p', kPURigidBodyArg, "2", "Id of Pick Up rigid body to publish pose for.");
+    getopt_add_int(gopt, 'd', kDORigidBodyArg, "3", "Id of Drop Off rigid body to publish pose for.");
     
     
     if (!getopt_parse(gopt, argc, argv, 1) || getopt_get_bool(gopt, "help")) {
@@ -28,8 +32,12 @@ int main(int argc, char** argv)
     }
     
     std::string interface = getopt_get_string(gopt, kInterfaceArg);
-    int rigidBodyId = getopt_get_int(gopt, kRigidBodyArg);
-        
+    int QrigidBodyId = getopt_get_int(gopt, kQRigidBodyArg);
+    int PUrigidBodyId = getopt_get_int(gopt, kPURigidBodyArg);
+    int DOrigidBodyId = getopt_get_int(gopt, kDORigidBodyArg);
+
+
+    
     // If there's no interface specified, then we'll need to guess
     if (interface.length() == 0)
     {
@@ -66,31 +74,35 @@ int main(int argc, char** argv)
  
         for(auto& msg : incomingMessages) {
             // Skip the message if it isn't for our particular rigid body
-            if(msg.id != rigidBodyId) {
-                continue;
-            }
-
-            // Converting from Optitrack with z forward, x left, y up to Maebot with x forward y left, z up gives the
-            // following:
-            //  opti.z -> quadrotor y
-            //  opti.x -> quadrotor x
-            //  -opti.y -> quadrotor z
-            pose_xyzrpy_t Pose;
-            Pose.utime = utime_now();
-            Pose.x = msg.x;
-            Pose.y = msg.z;
-            Pose.z = -msg.y;
-            double roll;
-            double pitch;
-            double yaw;
-            toEulerAngle(msg, roll, pitch, yaw);
-            Pose.roll = roll;
-            Pose.pitch = pitch;
-            Pose.yaw = yaw;
-            lcmInstance.publish("QUADROTOR_POSE_CHANNEL", &Pose);
             
-            std::cout << "Loc:" << Pose.x << ',' << Pose.y << ',' << Pose.z << '\n';
-            std::cout << "Ori:" << Pose.roll << ',' << Pose.pitch << ',' << Pose.yaw << '\n';
+                // Converting from Optitrack with z forward, x left, y up to Maebot with x forward y left, z up gives the
+                // following:
+                //  opti.z -> quadrotor y
+                //  opti.x -> quadrotor x
+                //  -opti.y -> quadrotor z
+                pose_xyzrpy_t Pose;
+                Pose.utime = utime_now();
+                Pose.x = msg.x;
+                Pose.y = msg.z;
+                Pose.z = -msg.y;
+                double roll;
+                double pitch;
+                double yaw;
+                toEulerAngle(msg, roll, pitch, yaw);
+                Pose.roll = roll;
+                Pose.pitch = yaw;
+                Pose.yaw = -pitch;
+                if(msg.id == QrigidBodyId) {
+                    lcmInstance.publish("QUADROTOR_POSE_CHANNEL", &Pose);
+                }
+                else if(msg.id == PUrigidBodyId) {
+                    lcmInstance.publish("PICKUP_POSE_CHANNEL", &Pose);
+                }
+                else if(msg.id == DOrigidBodyId) {
+                    lcmInstance.publish("DROPOFF_POSE_CHANNEL", &Pose);
+                }        
+                //std::cout << "Loc:" << Pose.x << ',' << Pose.y << ',' << Pose.z << '\n';
+                //std::cout << "Ori:" << Pose.roll << ',' << Pose.pitch << ',' << Pose.yaw << '\n';
         }
     }
     
