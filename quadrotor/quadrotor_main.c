@@ -120,7 +120,7 @@ void *lcm_subscribe_loop(void *data){
     cfg_data_frequency_t_publish(lcm, "CFG_DATA_FREQUENCY_1_TX", &cfg_data_frequency);
     cfg_data_frequency_t_publish(lcm, "CFG_DATA_FREQUENCY_1_RX", &cfg_data_frequency);
     //Subscribe to lcm channels here
-    channels_t_subscribe(lcm, BLOCKS_TX_CHANNEL, channels_handler, lcm);
+    channels_t_subscribe(lcm, BLOCKS_RX_CHANNEL, channels_handler, lcm);
     pose_list_t_subscribe(lcm, OPTI_CHANNEL, optitrack_handler, lcm);
     
     while(1){
