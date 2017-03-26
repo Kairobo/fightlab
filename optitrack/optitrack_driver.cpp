@@ -3,6 +3,7 @@
 #include <optitrack/common/getopt.h>
 #include <optitrack/common/timestamp.h>
 #include <lcmtypes/pose_xyzrpy_t.hpp>
+#include <lcmtypes/pose_list_t.hpp>
 #include <lcm/lcm-cpp.hpp>
 #include <netinet/in.h>
 #include <sys/socket.h>
@@ -71,39 +72,39 @@ int main(int argc, char** argv)
         // Block until we receive a datagram from the network
         recvfrom(dataSocket, packet, sizeof(packet), 0, (sockaddr*)&incomingAddress, &addrLen);
         incomingMessages = parse_optitrack_packet_into_messages(packet, sizeof(packet));
- 
-        for(auto& msg : incomingMessages) {
-            // Skip the message if it isn't for our particular rigid body
-            
-                // Converting from Optitrack with z forward, x left, y up to Maebot with x forward y left, z up gives the
-                // following:
-                //  opti.z -> quadrotor y
-                //  opti.x -> quadrotor x
-                //  -opti.y -> quadrotor z
-                pose_xyzrpy_t Pose;
-                Pose.utime = utime_now();
-                Pose.x = msg.x;
-                Pose.y = msg.z;
-                Pose.z = -msg.y;
-                double roll;
-                double pitch;
-                double yaw;
-                toEulerAngle(msg, roll, pitch, yaw);
-                Pose.roll = roll;
-                Pose.pitch = yaw;
-                Pose.yaw = -pitch;
-                if(msg.id == QrigidBodyId) {
-                    lcmInstance.publish("QUADROTOR_POSE_CHANNEL", &Pose);
-                }
-                else if(msg.id == PUrigidBodyId) {
-                    lcmInstance.publish("PICKUP_POSE_CHANNEL", &Pose);
-                }
-                else if(msg.id == DOrigidBodyId) {
-                    lcmInstance.publish("DROPOFF_POSE_CHANNEL", &Pose);
-                }        
-                //std::cout << "Loc:" << Pose.x << ',' << Pose.y << ',' << Pose.z << '\n';
-                //std::cout << "Ori:" << Pose.roll << ',' << Pose.pitch << ',' << Pose.yaw << '\n';
+        pose_list_t PoseList;
+        for(auto& msg : incomingMessages) {            
+            // Converting from Optitrack with z forward, x left, y up to Maebot with x forward y left, z up gives the
+            // following:
+            //  opti.z -> quadrotor y
+            //  opti.x -> quadrotor x
+            //  -opti.y -> quadrotor z
+            pose_xyzrpy_t Pose;
+            Pose.utime = utime_now();
+            Pose.x = msg.x;
+            Pose.y = msg.z;
+            Pose.z = -msg.y;
+            double roll;
+            double pitch;
+            double yaw;
+            toEulerAngle(msg, roll, pitch, yaw);
+            Pose.roll = roll;
+            Pose.pitch = yaw;
+            Pose.yaw = -pitch;
+            if(msg.id == QrigidBodyId) {
+                PoseList.Q_pose = Pose;
+
+            }
+            else if(msg.id == PUrigidBodyId) {
+                PoseList.PU_pose = Pose;
+            }
+            else if(msg.id == DOrigidBodyId) {
+                PoseList.DO_pose = Pose;
+
+            }
         }
+        PoseList.utime = utime_now();
+        lcmInstance.publish("QUADROTOR_POSE_CHANNEL", &PoseList);
     }
     
     // Cleanup options now that we've parsed everything we need
