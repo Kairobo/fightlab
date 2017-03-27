@@ -20,6 +20,9 @@ void channels_handler(const lcm_recv_buf_t *rbuf, const char *channel,
     state.RC_cmds[i] = msg->channels[i];
     new_msg.channels[i] = msg->channels[i];
   }
+  if(msg->channels[7]>=1500){
+    state.autonomous_mode = 1
+  }
   // Copy state to local state struct to minimize mutex lock time
   struct current_state_t localstate;
   localstate = state;
@@ -51,11 +54,9 @@ void channels_handler(const lcm_recv_buf_t *rbuf, const char *channel,
     set_points[7] = 0.0;
 
     auto_control(pose, set_points, new_msg.channels);
-    printf("\rAUTONOMOUS ON                        ");
 
   } else{
     // pass user commands through without modifying
-    printf("\rMANUAL                               ");
   }
 
   // send lcm message to motors

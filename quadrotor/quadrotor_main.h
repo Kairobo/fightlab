@@ -11,8 +11,9 @@
 
 #define     SAMPLE_RATE_HZ          100   // imu read speed
 #define     DT                      0.01  // 1/sample_rate
-#define     LCM_HZ                  30
-#define     PRINTF_HZ               10
+#define     LCM_HZ                  1000  // check for lcm messages
+#define     LCM_PUB_HZ              30    // publish user messages
+#define     PRINTF_HZ               10    // print to terminal
 
 
 

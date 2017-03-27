@@ -50,6 +50,7 @@ int main(int argc, char *argv[]){
     }
 
 	// start in the RUNNING state
+    state.autonomous_mode = 0;
 	set_state(RUNNING);
 
 	// Keep Running until state changes to EXITING
@@ -110,8 +111,9 @@ void* lcm_publish_loop(void* ptr){
 /*******************************************************************************
 * lcm subscribe_loop() 
 *
-* prints diagnostics to console
-* this only gets started if executing from terminal
+* subscribe to all handler functions
+* run lcm_handle_timeout continously to handle income lcm messages
+* 
 *******************************************************************************/
 void *lcm_subscribe_loop(void *data){
     //Set data frequency of blocks to 100Hz
@@ -125,6 +127,7 @@ void *lcm_subscribe_loop(void *data){
     
     while(1){
       lcm_handle_timeout(lcm, 1);
+      usleep(1000000 / LCM_HZ);
     }   
     lcm_destroy(lcm);
     return 0;
@@ -144,12 +147,12 @@ void* printf_loop(void* ptr){
         // check if this is the first time since being paused
         if(new_state==RUNNING && last_state!=RUNNING){
             printf("\nRUNNING\n");
-            printf("\n");
-                                      //   |
+            printf("\n       |");
+
             printf("       OPTITRACK       |");
             printf("          IMU          |");
             printf("        BLOCKS          |");
-            printf("\n");
+            printf("\n       |");
             printf("   X   |");
             printf("   Y   |");
             printf("   Z   |");
@@ -171,6 +174,12 @@ void* printf_loop(void* ptr){
         
         if(new_state == RUNNING){   
             printf("\r");
+            if(state.autonomous_mode == 1){
+                printf(" AUTO  |");
+            }
+            else{
+                printf("MANUAL |");
+            }
             //Add Print stattements here, do not follow with /n
             printf("%6.2f |", state.Q_xpos);
             printf("%6.2f |", state.Q_ypos);
