@@ -102,7 +102,7 @@ void* lcm_publish_loop(void* ptr){
 		//publish you own lcm messages here
         //use this to record what you want in lcm logger
         //always publishes the latest data
-		usleep(1000000 / LCM_HZ);
+		usleep(1000000 / LCM_PUB_HZ);
 	}
 	return NULL;
 }
