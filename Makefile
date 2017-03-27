@@ -25,3 +25,4 @@ clean:
 	@make -C optitrack -s clean
 	@make -C blocks -s clean
 	@make -C dynamixel -s clean
+	@make -C quadrotor -s clean
